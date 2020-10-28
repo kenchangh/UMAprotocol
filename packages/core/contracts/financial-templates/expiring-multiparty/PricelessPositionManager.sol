@@ -16,6 +16,7 @@ import "../../oracle/implementation/Constants.sol";
 import "../common/TokenFactory.sol";
 import "../common/FeePayer.sol";
 
+
 /**
  * @title Financial contract with priceless position management.
  * @notice Handles positions for multiple sponsors in an optimistic (i.e., priceless) way without relying
@@ -767,10 +768,14 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
             oraclePrice = 0;
         }
 
-        if (FixedPoint.isGreaterThan(oraclePrice, strikePrice)) {
-            return strikePrice;
+        FixedPoint.Unsigned oracleUnsigned = FixedPoint.Unsigned(uint256(oraclePrice));
+
+        if (requestedTime < expirationTimestamp) {
+            return FixedPoint.fromUnscaledUint(1);
+        } else if (FixedPoint.isLessThan(oracleUnsigned, strikePrice)) {
+            return FixedPoint.fromUnscaledUint(1);
         }
-        return FixedPoint.Unsigned(uint256(oraclePrice));
+        return FixedPoint.div(strikePrice, oracleUnsigned);
     }
 
     // Reset withdrawal request by setting the withdrawal request and withdrawal timestamp to 0.
