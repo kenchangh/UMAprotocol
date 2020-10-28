@@ -8,7 +8,6 @@ import "./PricelessPositionManager.sol";
 
 import "../../common/implementation/FixedPoint.sol";
 
-
 /**
  * @title Liquidatable
  * @notice Adds logic to a position-managing contract that enables callers to liquidate an undercollateralized position.
@@ -68,6 +67,7 @@ contract Liquidatable is PricelessPositionManager {
         FixedPoint.Unsigned minSponsorTokens;
         // Params specifically for Liquidatable.
         uint256 liquidationLiveness;
+        FixedPoint.Unsigned strikePrice;
         FixedPoint.Unsigned collateralRequirement;
         FixedPoint.Unsigned disputeBondPct;
         FixedPoint.Unsigned sponsorDisputeRewardPct;
@@ -166,6 +166,7 @@ contract Liquidatable is PricelessPositionManager {
             params.syntheticSymbol,
             params.tokenFactoryAddress,
             params.minSponsorTokens,
+            params.strikePrice,
             params.timerAddress,
             params.excessTokenBeneficiary
         )

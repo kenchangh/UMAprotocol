@@ -16,7 +16,6 @@ import "../../oracle/implementation/Constants.sol";
 import "../common/TokenFactory.sol";
 import "../common/FeePayer.sol";
 
-
 /**
  * @title Financial contract with priceless position management.
  * @notice Handles positions for multiple sponsors in an optimistic (i.e., priceless) way without relying
@@ -81,6 +80,8 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
 
     // The expiry price pulled from the DVM.
     FixedPoint.Unsigned public expiryPrice;
+
+    FixedPoint.Unsigned public strikePrice;
 
     // The excessTokenBeneficiary of any excess tokens added to the contract.
     address public excessTokenBeneficiary;
@@ -166,6 +167,7 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
         string memory _syntheticSymbol,
         address _tokenFactoryAddress,
         FixedPoint.Unsigned memory _minSponsorTokens,
+        FixedPoint.Unsigned memory _strikePrice,
         address _timerAddress,
         address _excessTokenBeneficiary
     ) public FeePayer(_collateralAddress, _finderAddress, _timerAddress) nonReentrant() {
@@ -177,6 +179,7 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
         TokenFactory tf = TokenFactory(_tokenFactoryAddress);
         tokenCurrency = tf.createToken(_syntheticName, _syntheticSymbol, 18);
         minSponsorTokens = _minSponsorTokens;
+        strikePrice = _strikePrice;
         priceIdentifier = _priceIdentifier;
         excessTokenBeneficiary = _excessTokenBeneficiary;
     }
@@ -762,6 +765,10 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
         // For now we don't want to deal with negative prices in positions.
         if (oraclePrice < 0) {
             oraclePrice = 0;
+        }
+
+        if (FixedPoint.isGreaterThan(oraclePrice, strikePrice)) {
+            return strikePrice;
         }
         return FixedPoint.Unsigned(uint256(oraclePrice));
     }
