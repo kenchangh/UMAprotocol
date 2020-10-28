@@ -768,14 +768,12 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
             oraclePrice = 0;
         }
 
-        FixedPoint.Unsigned oracleUnsigned = FixedPoint.Unsigned(uint256(oraclePrice));
-
         if (requestedTime < expirationTimestamp) {
             return FixedPoint.fromUnscaledUint(1);
-        } else if (FixedPoint.isLessThan(oracleUnsigned, strikePrice)) {
+        } else if (FixedPoint.isLessThan(uint256(oraclePrice), strikePrice)) {
             return FixedPoint.fromUnscaledUint(1);
         }
-        return FixedPoint.div(strikePrice, oracleUnsigned);
+        return FixedPoint.div(strikePrice, uint256(oraclePrice));
     }
 
     // Reset withdrawal request by setting the withdrawal request and withdrawal timestamp to 0.
