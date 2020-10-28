@@ -82,7 +82,7 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
     // The expiry price pulled from the DVM.
     FixedPoint.Unsigned public expiryPrice;
 
-    FixedPoint.Unsigned public strikePrice;
+    uint256 public strikePrice;
 
     // The excessTokenBeneficiary of any excess tokens added to the contract.
     address public excessTokenBeneficiary;
@@ -142,47 +142,46 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
         _;
     }
 
+    struct LiquidatableConstructorParams {
+        uint256 _expirationTimestamp;
+        uint256 _withdrawalLiveness;
+        address _collateralAddress;
+        address _finderAddress;
+        bytes32 _priceIdentifier;
+        string _syntheticName;
+        string _syntheticSymbol;
+        address _tokenFactoryAddress;
+        FixedPoint.Unsigned _minSponsorTokens;
+        uint256 _strikePrice;
+        address _timerAddress;
+        address _excessTokenBeneficiary;
+    }
+
     /**
      * @notice Construct the PricelessPositionManager
-     * @param _expirationTimestamp unix timestamp of when the contract will expire.
-     * @param _withdrawalLiveness liveness delay, in seconds, for pending withdrawals.
-     * @param _collateralAddress ERC20 token used as collateral for all positions.
-     * @param _finderAddress UMA protocol Finder used to discover other protocol contracts.
-     * @param _priceIdentifier registered in the DVM for the synthetic.
-     * @param _syntheticName name for the token contract that will be deployed.
-     * @param _syntheticSymbol symbol for the token contract that will be deployed.
-     * @param _tokenFactoryAddress deployed UMA token factory to create the synthetic token.
-     * @param _minSponsorTokens minimum amount of collateral that must exist at any time in a position.
-     * @param _timerAddress Contract that stores the current time in a testing environment.
-     * @param _excessTokenBeneficiary Beneficiary to which all excess token balances that accrue in the contract can be
+     * @param params the list of params
      * sent.
      * Must be set to 0x0 for production environments that use live time.
      */
-    constructor(
-        uint256 _expirationTimestamp,
-        uint256 _withdrawalLiveness,
-        address _collateralAddress,
-        address _finderAddress,
-        bytes32 _priceIdentifier,
-        string memory _syntheticName,
-        string memory _syntheticSymbol,
-        address _tokenFactoryAddress,
-        FixedPoint.Unsigned memory _minSponsorTokens,
-        FixedPoint.Unsigned memory _strikePrice,
-        address _timerAddress,
-        address _excessTokenBeneficiary
-    ) public FeePayer(_collateralAddress, _finderAddress, _timerAddress) nonReentrant() {
-        require(_expirationTimestamp > getCurrentTime(), "Invalid expiration in future");
-        require(_getIdentifierWhitelist().isIdentifierSupported(_priceIdentifier), "Unsupported price identifier");
+    constructor(LiquidatableConstructorParams memory params)
+        public
+        FeePayer(params._collateralAddress, params._finderAddress, params._timerAddress)
+        nonReentrant()
+    {
+        require(params._expirationTimestamp > getCurrentTime(), "Invalid expiration in future");
+        require(
+            _getIdentifierWhitelist().isIdentifierSupported(params._priceIdentifier),
+            "Unsupported price identifier"
+        );
 
-        expirationTimestamp = _expirationTimestamp;
-        withdrawalLiveness = _withdrawalLiveness;
-        TokenFactory tf = TokenFactory(_tokenFactoryAddress);
-        tokenCurrency = tf.createToken(_syntheticName, _syntheticSymbol, 18);
-        minSponsorTokens = _minSponsorTokens;
-        strikePrice = _strikePrice;
-        priceIdentifier = _priceIdentifier;
-        excessTokenBeneficiary = _excessTokenBeneficiary;
+        expirationTimestamp = params._expirationTimestamp;
+        withdrawalLiveness = params._withdrawalLiveness;
+        TokenFactory tf = TokenFactory(params._tokenFactoryAddress);
+        tokenCurrency = tf.createToken(params._syntheticName, params._syntheticSymbol, 18);
+        minSponsorTokens = params._minSponsorTokens;
+        strikePrice = params._strikePrice;
+        priceIdentifier = params._priceIdentifier;
+        excessTokenBeneficiary = params._excessTokenBeneficiary;
     }
 
     /****************************************
@@ -770,10 +769,10 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
 
         if (requestedTime < expirationTimestamp) {
             return FixedPoint.fromUnscaledUint(1);
-        } else if (FixedPoint.isLessThan(uint256(oraclePrice), strikePrice)) {
+        } else if (FixedPoint.isLessThan(uint256(oraclePrice), FixedPoint.fromUnscaledUint(strikePrice))) {
             return FixedPoint.fromUnscaledUint(1);
         }
-        return FixedPoint.div(strikePrice, uint256(oraclePrice));
+        return FixedPoint.div(FixedPoint.fromUnscaledUint(strikePrice), uint256(oraclePrice));
     }
 
     // Reset withdrawal request by setting the withdrawal request and withdrawal timestamp to 0.
