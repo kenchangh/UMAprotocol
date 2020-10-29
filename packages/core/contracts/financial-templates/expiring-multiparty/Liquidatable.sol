@@ -68,6 +68,7 @@ contract Liquidatable is PricelessPositionManager {
         FixedPoint.Unsigned minSponsorTokens;
         // Params specifically for Liquidatable.
         uint256 liquidationLiveness;
+        uint256 strikePrice;
         FixedPoint.Unsigned collateralRequirement;
         FixedPoint.Unsigned disputeBondPct;
         FixedPoint.Unsigned sponsorDisputeRewardPct;
@@ -157,17 +158,20 @@ contract Liquidatable is PricelessPositionManager {
     constructor(ConstructorParams memory params)
         public
         PricelessPositionManager(
-            params.expirationTimestamp,
-            params.withdrawalLiveness,
-            params.collateralAddress,
-            params.finderAddress,
-            params.priceFeedIdentifier,
-            params.syntheticName,
-            params.syntheticSymbol,
-            params.tokenFactoryAddress,
-            params.minSponsorTokens,
-            params.timerAddress,
-            params.excessTokenBeneficiary
+            LiquidatableConstructorParams(
+                params.expirationTimestamp,
+                params.withdrawalLiveness,
+                params.collateralAddress,
+                params.finderAddress,
+                params.priceFeedIdentifier,
+                params.syntheticName,
+                params.syntheticSymbol,
+                params.tokenFactoryAddress,
+                params.minSponsorTokens,
+                params.strikePrice,
+                params.timerAddress,
+                params.excessTokenBeneficiary
+            )
         )
         nonReentrant()
     {

@@ -36,6 +36,7 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         FixedPoint.Unsigned sponsorDisputeRewardPct;
         FixedPoint.Unsigned disputerDisputeRewardPct;
         FixedPoint.Unsigned minSponsorTokens;
+        uint256 strikePrice;
         uint256 withdrawalLiveness;
         uint256 liquidationLiveness;
         address excessTokenBeneficiary;
@@ -120,5 +121,6 @@ contract ExpiringMultiPartyCreator is ContractCreator, Testable, Lockable {
         constructorParams.withdrawalLiveness = params.withdrawalLiveness;
         constructorParams.liquidationLiveness = params.liquidationLiveness;
         constructorParams.excessTokenBeneficiary = params.excessTokenBeneficiary;
+        constructorParams.strikePrice = params.strikePrice;
     }
 }
