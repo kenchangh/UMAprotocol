@@ -767,11 +767,18 @@ contract PricelessPositionManager is FeePayer, AdministrateeInterface {
             oraclePrice = 0;
         }
 
+        // if price request is made before expiry, return 1. This means that we can keep
+        // the contract 100% collateralized with 1 WETH pre-expiry, and that disputes 
+        // pre-expiry are illogical (aka token is always backed by 1 WETH pre-expiry)
         if (requestedTime < expirationTimestamp) {
             return FixedPoint.fromUnscaledUint(1);
-        } else if (FixedPoint.isLessThan(uint256(oraclePrice), FixedPoint.fromUnscaledUint(strikePrice))) {
+        }
+        // if oraclePrice is below the strike, pay out 1 WETH
+        else if (FixedPoint.isLessThan(uint256(oraclePrice), FixedPoint.fromUnscaledUint(strikePrice))) {
             return FixedPoint.fromUnscaledUint(1);
         }
+        // if oracle price is above strike, pay out strike dollars worth of WETH based
+        // on ETHUSD price returned by oracle
         return FixedPoint.div(FixedPoint.fromUnscaledUint(strikePrice), uint256(oraclePrice));
     }
 
